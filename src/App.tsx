@@ -1,12 +1,13 @@
 import "./App.css";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
+import AiChat from "./page/AiChat";
 
 function App() {
   return (
     <>
       <BrowserRouter>
         <Routes>
-          <Route />
+          <Route path="/" element={<AiChat />} />
         </Routes>
       </BrowserRouter>
     </>
