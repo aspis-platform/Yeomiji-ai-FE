@@ -2,32 +2,48 @@ import { theme } from "../../style/theme";
 import dog_3D from "../../assets/dog_3D.svg";
 import styled from "styled-components";
 
-const Rank = () => {
+interface Recommendation {
+  rank: number;
+  breed: string;
+  reason: string;
+}
+
+interface RankProps {
+  recommendations: Recommendation[];
+}
+
+const Rank = ({ recommendations }: RankProps) => {
   return (
     <RankSection>
-      <RankWrap>
-        <Second>2</Second>
-        <SmallDog>
-          <img src={dog_3D} />
-        </SmallDog>
-        <BreedNameSmall>포메라니안</BreedNameSmall>
-      </RankWrap>
+      {recommendations.length >= 2 && (
+        <RankWrap>
+          <Second>2</Second>
+          <SmallDog>
+            <img src={dog_3D} alt={recommendations[1].breed} />
+          </SmallDog>
+          <BreedNameSmall>{recommendations[1].breed}</BreedNameSmall>
+        </RankWrap>
+      )}
 
-      <RankWrap>
-        <First>1</First>
-        <BigDog>
-          <img src={dog_3D} />
-        </BigDog>
-        <BreedNameBig>포메라니안</BreedNameBig>
-      </RankWrap>
+      {recommendations.length >= 1 && (
+        <RankWrap>
+          <First>1</First>
+          <BigDog>
+            <img src={dog_3D} alt={recommendations[0].breed} />
+          </BigDog>
+          <BreedNameBig>{recommendations[0].breed}</BreedNameBig>
+        </RankWrap>
+      )}
 
-      <RankWrap>
-        <Third>3</Third>
-        <SmallDog>
-          <img src={dog_3D} />
-        </SmallDog>
-        <BreedNameSmall>포메라니안</BreedNameSmall>
-      </RankWrap>
+      {recommendations.length >= 3 && (
+        <RankWrap>
+          <Third>3</Third>
+          <SmallDog>
+            <img src={dog_3D} alt={recommendations[2].breed} />
+          </SmallDog>
+          <BreedNameSmall>{recommendations[2].breed}</BreedNameSmall>
+        </RankWrap>
+      )}
     </RankSection>
   );
 };
@@ -48,6 +64,7 @@ const First = styled.div`
   left: 8px;
   top: 8px;
 `;
+
 const Second = styled.div`
   width: 32px;
   height: 32px;
@@ -64,6 +81,7 @@ const Second = styled.div`
   left: 8px;
   top: 8px;
 `;
+
 const Third = styled.div`
   width: 32px;
   height: 32px;
@@ -80,12 +98,25 @@ const Third = styled.div`
   left: 8px;
   top: 8px;
 `;
+
 const BreedNameBig = styled.h3`
-  font-size: 24px;
-`;
-const BreedNameSmall = styled.h3`
   font-size: 20px;
+  text-align: center;
+  max-width: 120px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 `;
+
+const BreedNameSmall = styled.h3`
+  font-size: 16px;
+  text-align: center;
+  max-width: 100px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+`;
+
 const RankWrap = styled.div`
   display: flex;
   flex-direction: column;
@@ -95,9 +126,10 @@ const RankWrap = styled.div`
   color: black;
   position: relative;
 `;
+
 const SmallDog = styled.div`
-  width: 152px;
-  height: 152px;
+  width: 120px;
+  height: 120px;
   border: none;
   border-radius: 180px;
   background-color: ${theme.color.main};
@@ -106,13 +138,14 @@ const SmallDog = styled.div`
   justify-content: center;
   align-items: center;
   img {
-    width: 120px;
-    height: 120px;
+    width: 90px;
+    height: 90px;
   }
 `;
+
 const BigDog = styled.div`
-  width: 180px;
-  height: 180px;
+  width: 140px;
+  height: 140px;
   border: none;
   border-radius: 200px;
   background-color: ${theme.color.main};
@@ -121,16 +154,20 @@ const BigDog = styled.div`
   justify-content: center;
   align-items: center;
   img {
-    width: 152px;
-    height: 152px;
+    width: 110px;
+    height: 110px;
   }
 `;
+
 const RankSection = styled.div`
-  width: 100%;
+  width: 90%;
+  max-width: 800px;
   display: flex;
   flex-direction: row;
   align-items: center;
-  gap: 18px;
+  justify-content: center;
+  gap: 12px;
+  padding: 0 10px;
 `;
 
 export default Rank;

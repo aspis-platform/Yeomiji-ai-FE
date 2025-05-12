@@ -1,7 +1,41 @@
-import styled from "styled-components";
+const LoadingOverlay = styled.div`
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  background-color: rgba(255, 255, 255, 0.8);
+  z-index: 10;
+  gap: 20px;
+  backdrop-filter: blur(2px);
+  
+  p {
+    font-size: 18px;
+    font-weight: 500;
+    color: ${theme.color.main};
+    margin-top: 20px;
+  }
+`;
+
+const LoadingSpinner = styled.div`
+  width: 60px;
+  height: 60px;
+  border: 6px solid rgba(87, 143, 202, 0.2);
+  border-top: 6px solid ${theme.color.main};
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+  
+  @keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+  }
+`;import styled from "styled-components";
 import { theme } from "../style/theme";
 import cross from "../assets/cross.svg";
-import { useState } from "react";
 import StartView from "../components/main/StartView";
 import JobView from "../components/main/JobView";
 import HouseForm from "../components/main/HouseFormView";
@@ -11,17 +45,36 @@ import ActivityLevelView from "../components/main/ActivityLevelView";
 import FamilyFormView from "../components/main/FamilyFormView";
 import DogSizeView from "../components/main/DogSizeView";
 import ResultView from "../components/Result/ResultView";
+import { useSurvey } from "../context/SurveyContext";
 
 const AiChat = () => {
-  const [currentScreen, setCurrentScreen] = useState(0);
-  const [gauge, setGauge] = useState(0);
+  const { 
+    currentStep, 
+    setCurrentStep, 
+    progressPercentage,
+    loading,
+    submitSurvey,
+    clearSurvey
+  } = useSurvey();
+
   const goToNext = () => {
-    setCurrentScreen(currentScreen + 1);
-    setGauge(gauge + 75);
+    if (currentStep === 7) {
+      // 마지막 단계에서 API 호출
+      submitSurvey();
+    } else {
+      setCurrentStep(currentStep + 1);
+    }
   };
+
   const goBack = () => {
-    setCurrentScreen(currentScreen - 1);
-    setGauge(gauge - 75);
+    setCurrentStep(currentStep - 1);
+  };
+
+  // 설문 취소 핸들러
+  const handleCancel = () => {
+    if (window.confirm('설문을 취소하시겠습니까? 모든 진행 상황이 초기화됩니다.')) {
+      clearSurvey();
+    }
   };
 
   const screenTexts = [
@@ -83,59 +136,66 @@ const AiChat = () => {
         <Container>
           <MainTitle>아스피스 AI 입양 매칭</MainTitle>
           <ChatBox>
-            <Exit>
+            <Exit onClick={handleCancel}>
               <img src={cross} alt="" />
             </Exit>
             <Title>나에게 맞는 반려견 찾기</Title>
-            {currentScreen > 0 && currentScreen < 8 && (
+            {currentStep > 0 && currentStep < 8 && (
               <Progress>
                 <Bar>
-                  <GaugeBar gauge={gauge} />
+                  <GaugeBar gauge={progressPercentage} />
                 </Bar>
                 <SmallText>
-                  <p>{screenTexts[currentScreen].progress}</p>
-                  <p>{screenTexts[currentScreen].percentage}</p>
+                  <p>{screenTexts[currentStep].progress}</p>
+                  <p>{screenTexts[currentStep].percentage}</p>
                 </SmallText>
               </Progress>
             )}
             <ScrollableArea>
               <ChatContainer>
                 <Text>
-                  <Title>{screenTexts[currentScreen].title}</Title>
-                  <p>{screenTexts[currentScreen]?.subtitle ?? ""}</p>
+                  <Title>{screenTexts[currentStep].title}</Title>
+                  <p>{screenTexts[currentStep]?.subtitle ?? ""}</p>
                 </Text>
                 <Main>
-                  {currentScreen === 0 && <StartView goToNext={goToNext} />}
+                  {currentStep === 0 && <StartView goToNext={goToNext} />}
 
-                  {currentScreen === 1 && (
+                  {currentStep === 1 && (
                     <JobView goToNext={goToNext} goBack={goBack} />
                   )}
 
-                  {currentScreen === 2 && (
+                  {currentStep === 2 && (
                     <HouseForm goToNext={goToNext} goBack={goBack} />
                   )}
 
-                  {currentScreen === 3 && (
+                  {currentStep === 3 && (
                     <HouseOwnershipView goToNext={goToNext} goBack={goBack} />
                   )}
 
-                  {currentScreen === 4 && (
+                  {currentStep === 4 && (
                     <FamilyFormView goToNext={goToNext} goBack={goBack} />
                   )}
 
-                  {currentScreen === 5 && (
+                  {currentStep === 5 && (
                     <PersonalityView goToNext={goToNext} goBack={goBack} />
                   )}
 
-                  {currentScreen === 6 && (
+                  {currentStep === 6 && (
                     <ActivityLevelView goToNext={goToNext} goBack={goBack} />
                   )}
 
-                  {currentScreen === 7 && (
+                  {currentStep === 7 && (
                     <DogSizeView goToNext={goToNext} goBack={goBack} />
                   )}
 
-                  {currentScreen === 8 && <ResultView />}
+                  {currentStep === 8 && <ResultView />}
+                  
+                  {loading && (
+                    <LoadingOverlay>
+                      <LoadingSpinner />
+                      <p>AI가 당신에게 맞는 반려견을 찾고 있어요...</p>
+                    </LoadingOverlay>
+                  )}
                 </Main>
               </ChatContainer>
             </ScrollableArea>
@@ -159,9 +219,11 @@ const Bar = styled.div`
   overflow: hidden;
 `;
 const GaugeBar = styled.div<{ gauge: number }>`
-  width: ${(prop) => prop.gauge}px;
+  width: ${(prop) => prop.gauge}%;
   height: 100%;
-  background-color: ${theme.color.main};
+  background: linear-gradient(90deg, ${theme.color.main}, #4B6EAA);
+  transition: width 0.8s cubic-bezier(0.34, 1.56, 0.64, 1);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
 `;
 const SmallText = styled.div`
   width: 100%;
@@ -208,39 +270,93 @@ const ChatContainer = styled.div`
 const Title = styled.h2`
   font-size: 24px;
   font-weight: 600;
-  color: black;
+  color: #333;
+  transition: transform 0.3s ease;
+  
+  &:hover {
+    transform: translateX(5px);
+  }
 `;
 const Exit = styled.div`
   img {
     width: 32px;
     height: 32px;
+    transition: transform 0.3s ease;
   }
   position: absolute;
   top: 20px;
   right: 20px;
   cursor: pointer;
+  padding: 8px;
+  border-radius: 50%;
+  background-color: rgba(255, 255, 255, 0.9);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  transition: all 0.3s ease;
+  
+  &:hover {
+    background-color: rgba(240, 240, 240, 0.9);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    
+    img {
+      transform: rotate(90deg);
+    }
+  }
 `;
 const ChatBox = styled.div`
   width: 600px;
   height: 720px;
-  border-radius: 20px;
-  box-shadow: 0 6px 10px 4px rgba(0, 0, 0, 0.15);
+  border-radius: 24px;
+  box-shadow: 0 10px 30px rgba(87, 143, 202, 0.2);
   padding: 40px;
   display: flex;
   flex-direction: column;
   gap: 32px;
   position: relative;
   overflow: hidden;
+  background-color: white;
+  animation: fadeIn 0.8s ease-in-out;
+  
+  @keyframes fadeIn {
+    from {
+      opacity: 0;
+      transform: translateY(20px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
 `;
 const MainTitle = styled.h1`
-  font-size: 32px;
+  font-size: 36px;
   font-weight: 700;
+  color: #333;
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  margin-bottom: 10px;
+  background: linear-gradient(120deg, #578FCA, #4B6EAA);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  animation: slideDown 1s ease-in-out;
+  
+  @keyframes slideDown {
+    from {
+      opacity: 0;
+      transform: translateY(-30px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
 `;
 const Container = styled.div`
   display: flex;
   flex-direction: column;
   align-items: center;
   gap: 52px;
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 20px;
 `;
 const Section = styled.section`
   width: 100vw;
@@ -248,6 +364,8 @@ const Section = styled.section`
   display: flex;
   justify-content: center;
   align-items: center;
+  overflow: hidden;
+  background-color: #f9fafc;
 `;
 
 export default AiChat;

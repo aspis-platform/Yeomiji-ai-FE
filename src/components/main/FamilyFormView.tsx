@@ -1,8 +1,12 @@
+import { useState } from "react";
 import styled from "styled-components";
 import GoBackButton from "../buttons/GoBackButton";
 import GoNextButton from "../buttons/GoNextButton";
+import SelectionButton from "../buttons/SelectionButton";
 import { theme } from "../../style/theme";
 import dropdown from "../../assets/dropdown.svg";
+import { useSurvey } from "../../context/SurveyContext";
+import type { FamilyFormType } from "../../api/types";
 
 interface Prop {
   goToNext: () => void;
@@ -10,7 +14,9 @@ interface Prop {
 }
 
 const FamilyFormView = ({ goToNext, goBack }: Prop) => {
-  const familyForm = [
+  const { familyForm, setFamilyForm } = useSurvey();
+
+  const familyFormOptions = [
     {
       id: 1,
       name: "혼자 사는 1인 가구",
@@ -44,15 +50,27 @@ const FamilyFormView = ({ goToNext, goBack }: Prop) => {
       name: "대가족(3세대 이상 함께 거주)",
     },
   ];
+
+  // 선택 핸들러
+  const handleSelectChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    setFamilyForm(e.target.value as FamilyFormType);
+  };
+
+  // 다음 버튼 활성화 여부
+  const isNextEnabled = familyForm !== null;
+
   return (
     <Section>
       <DropdownContainer>
         <Select>
-          <select defaultValue={"가족 형태를 선택하세요"}>
+          <select 
+            value={familyForm || "가족 형태를 선택하세요"} 
+            onChange={handleSelectChange}
+          >
             <option disabled hidden value="가족 형태를 선택하세요">
               가족 형태를 선택하세요
             </option>
-            {familyForm.map((form) => (
+            {familyFormOptions.map((form) => (
               <option value={form.name} key={form.id}>
                 {form.name}
               </option>
@@ -63,7 +81,7 @@ const FamilyFormView = ({ goToNext, goBack }: Prop) => {
       </DropdownContainer>
       <ButtonContainer>
         <GoBackButton goBack={goBack} />
-        <GoNextButton goToNext={goToNext} />
+        <GoNextButton goToNext={goToNext} disabled={!isNextEnabled} />
       </ButtonContainer>
     </Section>
   );

@@ -2,6 +2,7 @@ import styled from "styled-components";
 import Input from "../input/Input";
 import GoBackButton from "../buttons/GoBackButton";
 import GoNextButton from "../buttons/GoNextButton";
+import { useSurvey } from "../../context/SurveyContext";
 
 interface Prop {
   goToNext: () => void;
@@ -9,6 +10,11 @@ interface Prop {
 }
 
 const JobView = ({ goToNext, goBack }: Prop) => {
+  const { job } = useSurvey();
+
+  // 다음 버튼 활성화 여부
+  const isNextEnabled = job.trim() !== '';
+
   return (
     <Section>
       <InputContainer>
@@ -16,7 +22,7 @@ const JobView = ({ goToNext, goBack }: Prop) => {
       </InputContainer>
       <ButtonContainer>
         <GoBackButton goBack={goBack} />
-        <GoNextButton goToNext={goToNext} />
+        <GoNextButton goToNext={goToNext} disabled={!isNextEnabled} />
       </ButtonContainer>
     </Section>
   );
