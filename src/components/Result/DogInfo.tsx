@@ -2,16 +2,17 @@ import styled from "styled-components";
 import img_ex from "../../assets/img_ex.svg";
 import { theme } from "../../style/theme";
 
-interface DogInfoProps {
+export interface DogInfoProps {
   name: string;
   description: string;
-  imageUrl?: string;
-  onAdoptClick?: () => void;
+  imageUrl: string;
+  onAdoptClick: () => void;
+  onClick: () => void;
 }
 
-const DogInfo = ({ name, description, imageUrl, onAdoptClick }: DogInfoProps) => {
+const DogInfo = ({ name, description, imageUrl, onAdoptClick, onClick }: DogInfoProps) => {
   return (
-    <Container onClick={onAdoptClick}>
+    <Container onClick={onClick}>
       <ImgContainer style={{ backgroundImage: `url(${imageUrl || img_ex})` }}>
         <Overlay>
           <OverlayText>자세히 알아보기</OverlayText>
@@ -21,6 +22,12 @@ const DogInfo = ({ name, description, imageUrl, onAdoptClick }: DogInfoProps) =>
       <InfoContainer>
         <Name>{name}</Name>
         <p>{description}</p>
+        <AdoptButton onClick={(e) => {
+          e.stopPropagation();
+          onAdoptClick();
+        }}>
+          입양 신청하기
+        </AdoptButton>
       </InfoContainer>
     </Container>
   );
@@ -91,6 +98,22 @@ const Container = styled.div`
 
   &:hover {
     transform: translateY(-5px);
+  }
+`;
+
+const AdoptButton = styled.button`
+  align-self: flex-start;
+  padding: 10px 20px;
+  background: ${theme.color.main};
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+
+  &:hover {
+    background: ${theme.color.mainDark};
   }
 `;
 

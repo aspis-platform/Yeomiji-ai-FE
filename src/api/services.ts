@@ -1,17 +1,21 @@
-import { api } from './config';
+import axios from 'axios';
 import type { 
   SurveyResult, 
   RecommendationResult, 
   AdoptionForm, 
-  Breed 
+  AdoptionResponse,
+  Breed,
+  Animal
 } from './types';
+
+const BASE_URL = 'https://aspis-core-api.ncloud.sbs/v1';
 
 // API 서비스 함수들
 export const apiService = {
   // 견종 추천
   async getRecommendation(surveyData: SurveyResult): Promise<RecommendationResult> {
-    // 필드명을 백엔드 형식에 맞게 변환
-    const formattedData = {
+    // 프론트엔드 필드명을 백엔드 필드명으로 변환
+    const transformedData = {
       job: surveyData.job,
       house_type: surveyData.houseType,
       ownership: surveyData.houseOwnership,
@@ -20,28 +24,34 @@ export const apiService = {
       activity_preference: surveyData.activityLevel,
       size_preference: surveyData.dogSize
     };
-    
-    const response = await api.post('/recommend', formattedData);
+
+    const response = await axios.post(`${BASE_URL}/recommend/`, transformedData);
     return response.data;
   },
 
   // 가용한 견종 목록 조회
   async getAvailableBreeds(): Promise<Breed[]> {
-    const response = await api.get('/available-breeds');
+    const response = await axios.get(`${BASE_URL}/available-breeds`);
     return response.data;
   },
 
   // 입양 신청
-  async submitAdoption(adoptionForm: AdoptionForm): Promise<void> {
-    await api.post('/adoptions', adoptionForm);
+  async submitAdoption(formData: AdoptionForm): Promise<AdoptionResponse> {
+    const response = await axios.post(`${BASE_URL}/adoption/`, formData);
+    return response.data;
   },
 
   // 관리자 로그인
   adminLogin: async (username: string, password: string) => {
-    const response = await api.post('/token', {
+    const response = await axios.post(`${BASE_URL}/token/`, {
       username,
       password,
     });
     return response.data;
   },
+
+  async getShelterAnimals(): Promise<Animal[]> {
+    const response = await axios.get(`${BASE_URL}/animals/get-all`);
+    return response.data;
+  }
 };

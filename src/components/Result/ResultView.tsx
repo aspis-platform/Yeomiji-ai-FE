@@ -4,59 +4,48 @@ import Rank from "./Rank";
 import blue_arrow from "../../assets/blue_arrow.svg";
 import DogInfo from "./DogInfo";
 import { useSurvey } from "../../context/SurveyContext";
-import { useAdoptionSubmit } from "../../api";
-import { useState } from "react";
-import type { Recommendation } from "../../api/types";
+import { useState, useEffect } from "react";
+import type { Recommendation, Animal } from "../../api/types";
+import { apiService } from "../../api/services";
+import { useNavigate } from "react-router-dom";
 
 const ResultView = () => {
   const { recommendation, loading, error, clearSurvey, getSurveyData } = useSurvey();
-  const [showAdoptionForm, setShowAdoptionForm] = useState(false);
-  const [selectedBreedId, setSelectedBreedId] = useState<number | null>(null);
-  const [adoptionFormData, setAdoptionFormData] = useState({
-    name: "",
-    contact: "",
-    address: "",
-    reason: "",
-  });
-  const { submitAdoption, loading: submitLoading } = useAdoptionSubmit();
+  const [shelterAnimals, setShelterAnimals] = useState<Animal[]>([]);
+  const [loadingAnimals, setLoadingAnimals] = useState(false);
+  const [selectedAnimal, setSelectedAnimal] = useState<Animal | null>(null);
+  const navigate = useNavigate();
 
-  const handleShowShelterDogs = () => {
-    console.log("보호소 견종 보기");
-  };
+  useEffect(() => {
+    const fetchShelterAnimals = async () => {
+      if (recommendation?.recommendations) {
+        setLoadingAnimals(true);
+        try {
+          const animals = await apiService.getShelterAnimals();
+          // 추천된 견종과 일치하는 동물만 필터링
+          const recommendedBreeds = recommendation.recommendations.map(rec => rec.breed);
+          const filteredAnimals = animals.filter(animal => 
+            recommendedBreeds.includes(animal.breedInfo.breedName)
+          );
+          setShelterAnimals(filteredAnimals);
+        } catch (error) {
+          console.error('보호소 동물 데이터 조회 실패:', error);
+        } finally {
+          setLoadingAnimals(false);
+        }
+      }
+    };
 
-  const handleShowAdoptionForm = (breedId: number) => {
-    setSelectedBreedId(breedId);
-    setShowAdoptionForm(true);
-  };
+    fetchShelterAnimals();
+  }, [recommendation]);
 
-  const handleSubmitAdoption = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!selectedBreedId) return;
-
-    try {
-      await submitAdoption({
-        ...adoptionFormData,
-        breedId: selectedBreedId,
-        userSurvey: getSurveyData(),
-      });
-      setShowAdoptionForm(false);
-      setAdoptionFormData({
-        name: "",
-        contact: "",
-        address: "",
-        reason: "",
-      });
-    } catch (error) {
-      console.error("입양 신청 실패:", error);
-    }
-  };
-
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
-    const { name, value } = e.target;
-    setAdoptionFormData(prev => ({
-      ...prev,
-      [name]: value
-    }));
+  const handleShowAdoptionForm = (breedId: string) => {
+    navigate('/adoption-form', {
+      state: {
+        breedId,
+        surveyData: getSurveyData()
+      }
+    });
   };
 
   const handleRetakeSurvey = () => {
@@ -108,110 +97,42 @@ const ResultView = () => {
         <img src={blue_arrow} alt="화살표" />
         <p>매칭된 보호견들 보러가기...</p>
       </More>
-      {recommendation.recommendations.map((rec: Recommendation, index: number) => (
-        <DogInfo 
-          key={index}
-          name={rec.breed}
-          description={rec.reason}
-          imageUrl={`/images/${rec.breed.toLowerCase()}.jpg`}
-          onAdoptClick={() => handleShowAdoptionForm(index + 1)}
-        />
-      ))}
+      {loadingAnimals ? (
+        <LoadingMessage>보호견 정보를 불러오는 중...</LoadingMessage>
+      ) : (
+        shelterAnimals.map((animal) => (
+          <DogInfo 
+            key={animal.id}
+            name={animal.name}
+            description={`${animal.breedInfo.breedName} | ${animal.sex === 'MALE' ? '수컷' : '암컷'} | ${animal.isNeutered ? '중성화 완료' : '중성화 미완료'}`}
+            imageUrl={animal.profileUrl}
+            onAdoptClick={() => handleShowAdoptionForm(animal.breedId)}
+            onClick={() => setSelectedAnimal(animal)}
+          />
+        ))
+      )}
 
-      {showAdoptionForm && (
-        <AdoptionFormModal>
-          <FormContainer>
-            <h2>입양 신청서</h2>
-            <form onSubmit={handleSubmitAdoption}>
-              <FormGroup>
-                <label htmlFor="name">이름</label>
-                <input 
-                  type="text" 
-                  id="name" 
-                  name="name" 
-                  value={adoptionFormData.name} 
-                  onChange={handleInputChange} 
-                  required 
-                />
-              </FormGroup>
-              <FormGroup>
-                <label htmlFor="contact">연락처</label>
-                <input 
-                  type="tel" 
-                  id="contact" 
-                  name="contact" 
-                  value={adoptionFormData.contact} 
-                  onChange={handleInputChange} 
-                  required 
-                />
-              </FormGroup>
-              <FormGroup>
-                <label htmlFor="address">주소</label>
-                <input 
-                  type="text" 
-                  id="address" 
-                  name="address" 
-                  value={adoptionFormData.address} 
-                  onChange={handleInputChange} 
-                  required 
-                />
-              </FormGroup>
-              <FormGroup>
-                <label htmlFor="reason">입양 이유</label>
-                <textarea 
-                  id="reason" 
-                  name="reason" 
-                  value={adoptionFormData.reason} 
-                  onChange={handleInputChange} 
-                  required 
-                />
-              </FormGroup>
-              <ButtonGroup>
-                <CancelButton type="button" onClick={() => setShowAdoptionForm(false)}>
-                  취소
-                </CancelButton>
-                <SubmitButton type="submit" disabled={submitLoading}>
-                  {submitLoading ? '제출 중...' : '입양 신청'}
-                </SubmitButton>
-              </ButtonGroup>
-            </form>
-          </FormContainer>
-          <ModalOverlay onClick={() => setShowAdoptionForm(false)} />
-        </AdoptionFormModal>
+      {selectedAnimal && (
+        <AnimalModal>
+          <ModalContent>
+            <CloseButton onClick={() => setSelectedAnimal(null)}>×</CloseButton>
+            <AnimalImage src={selectedAnimal.profileUrl} alt={selectedAnimal.name} />
+            <AnimalInfo>
+              <h2>{selectedAnimal.name}</h2>
+              <p>견종: {selectedAnimal.breedInfo.breedName}</p>
+              <p>성별: {selectedAnimal.sex === 'MALE' ? '수컷' : '암컷'}</p>
+              <p>중성화: {selectedAnimal.isNeutered ? '완료' : '미완료'}</p>
+            </AnimalInfo>
+            <AdoptButton onClick={() => handleShowAdoptionForm(selectedAnimal.breedId)}>
+              입양 신청하기
+            </AdoptButton>
+          </ModalContent>
+          <ModalOverlay onClick={() => setSelectedAnimal(null)} />
+        </AnimalModal>
       )}
     </Section>
   );
 };
-
-const More = styled.div`
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-  align-items: center;
-  color: ${theme.color.main};
-  animation: upDown 1.5s ease-in-out infinite;
-
-  @keyframes upDown {
-    0%,
-    100% {
-      transform: translateY(0);
-    }
-    50% {
-      transform: translateY(-10px);
-    }
-  }
-`;
-
-const Desc = styled.div`
-  width: 90%;
-  max-width: 800px;
-  line-height: 1.6;
-  padding: 20px;
-  background-color: rgba(255, 255, 255, 0.8);
-  border-radius: 16px;
-  box-shadow: 0 8px 20px rgba(87, 143, 202, 0.15);
-  border-left: 4px solid ${theme.color.main};
-`;
 
 const Section = styled.section`
   width: 90%;
@@ -264,7 +185,37 @@ const RetryButton = styled.button`
   }
 `;
 
-const AdoptionFormModal = styled.div`
+const More = styled.div`
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  align-items: center;
+  color: ${theme.color.main};
+  animation: upDown 1.5s ease-in-out infinite;
+
+  @keyframes upDown {
+    0%,
+    100% {
+      transform: translateY(0);
+    }
+    50% {
+      transform: translateY(-10px);
+    }
+  }
+`;
+
+const Desc = styled.div`
+  width: 90%;
+  max-width: 800px;
+  line-height: 1.6;
+  padding: 20px;
+  background-color: rgba(255, 255, 255, 0.8);
+  border-radius: 16px;
+  box-shadow: 0 8px 20px rgba(87, 143, 202, 0.15);
+  border-left: 4px solid ${theme.color.main};
+`;
+
+const AnimalModal = styled.div`
   position: fixed;
   top: 0;
   left: 0;
@@ -276,6 +227,72 @@ const AdoptionFormModal = styled.div`
   z-index: 1000;
 `;
 
+const ModalContent = styled.div`
+  background: white;
+  padding: 30px;
+  border-radius: 16px;
+  width: 90%;
+  max-width: 500px;
+  position: relative;
+  z-index: 1001;
+  box-shadow: 0 5px 30px rgba(0, 0, 0, 0.3);
+`;
+
+const CloseButton = styled.button`
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  background: none;
+  border: none;
+  font-size: 24px;
+  cursor: pointer;
+  color: #666;
+  
+  &:hover {
+    color: #333;
+  }
+`;
+
+const AnimalImage = styled.img`
+  width: 100%;
+  height: 300px;
+  object-fit: cover;
+  border-radius: 8px;
+  margin-bottom: 20px;
+`;
+
+const AnimalInfo = styled.div`
+  margin-bottom: 20px;
+  
+  h2 {
+    font-size: 24px;
+    color: ${theme.color.main};
+    margin-bottom: 15px;
+  }
+  
+  p {
+    margin: 8px 0;
+    color: #666;
+  }
+`;
+
+const AdoptButton = styled.button`
+  width: 100%;
+  padding: 12px;
+  border: none;
+  border-radius: 8px;
+  background: ${theme.color.main};
+  color: white;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  
+  &:hover {
+    background: ${theme.color.mainDark};
+    transform: translateY(-2px);
+  }
+`;
+
 const ModalOverlay = styled.div`
   position: absolute;
   top: 0;
@@ -283,116 +300,6 @@ const ModalOverlay = styled.div`
   width: 100%;
   height: 100%;
   background-color: rgba(0, 0, 0, 0.7);
-`;
-
-const FormContainer = styled.div`
-  background: ${theme.color.main};
-  padding: 30px;
-  border-radius: 16px;
-  width: 90%;
-  max-width: 500px;
-  z-index: 1001;
-  box-shadow: 0 5px 30px rgba(0, 0, 0, 0.3);
-  
-  h2 {
-    margin-bottom: 20px;
-    text-align: center;
-    color: white;
-    font-size: 24px;
-  }
-  
-  form {
-    display: flex;
-    flex-direction: column;
-    gap: 15px;
-  }
-
-  label {
-    color: white;
-  }
-
-  input, textarea {
-    background: rgba(255, 255, 255, 0.9);
-    border: none;
-    
-    &:focus {
-      border-color: white;
-      background: white;
-    }
-  }
-`;
-
-const FormGroup = styled.div`
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-  
-  label {
-    font-weight: 500;
-    color: #333;
-  }
-  
-  input, textarea {
-    padding: 12px;
-    border: 2px solid #ddd;
-    border-radius: 8px;
-    font-size: 16px;
-    transition: all 0.3s ease;
-    
-    &:focus {
-      border-color: ${theme.color.main};
-      outline: none;
-    }
-  }
-  
-  textarea {
-    min-height: 120px;
-    resize: vertical;
-  }
-`;
-
-const ButtonGroup = styled.div`
-  display: flex;
-  gap: 15px;
-  margin-top: 10px;
-`;
-
-const CancelButton = styled.button`
-  flex: 1;
-  padding: 12px;
-  border: 2px solid white;
-  border-radius: 8px;
-  background: transparent;
-  color: white;
-  font-weight: 600;
-  cursor: pointer;
-  transition: all 0.3s ease;
-  
-  &:hover {
-    background: rgba(255, 255, 255, 0.1);
-  }
-`;
-
-const SubmitButton = styled.button`
-  flex: 2;
-  padding: 12px;
-  border: none;
-  border-radius: 8px;
-  background: white;
-  color: ${theme.color.main};
-  font-weight: 600;
-  cursor: pointer;
-  transition: all 0.3s ease;
-  
-  &:hover:not(:disabled) {
-    background: rgba(255, 255, 255, 0.9);
-    transform: translateY(-2px);
-  }
-  
-  &:disabled {
-    background: rgba(255, 255, 255, 0.5);
-    cursor: not-allowed;
-  }
 `;
 
 export default ResultView;
