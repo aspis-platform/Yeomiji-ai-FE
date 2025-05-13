@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import styled from 'styled-components';
 import { useParams, useNavigate } from 'react-router-dom';
 import { theme } from '../../style/theme';
@@ -21,6 +21,7 @@ const AdoptionDetail = () => {
     return animal ? animal.breed : '알 수 없는 견종';
   };
   
+  // 초기 데이터 로드
   useEffect(() => {
     // 토큰 확인 - 로그인 여부 체크
     const token = localStorage.getItem('token');
@@ -36,6 +37,25 @@ const AdoptionDetail = () => {
       fetchAdoption(parseInt(id));
     }
   }, [id, fetchAdoption, navigate, fetchAnimals]);
+  
+  // 자동 새로고침 설정 (주석 처리 됨)
+  useEffect(() => {
+    // 5초마다 데이터 새로고침 - 상세 페이지는 자동 새로고침이 필요하지 않음
+    // 필요하면 아래 코드를 사용할 수 있음
+    /*
+    const refreshIntervalRef = setInterval(() => {
+      console.log('Auto refresh detail data...');
+      if (id) {
+        fetchAdoption(parseInt(id));
+        fetchAnimals();
+      }
+    }, 5000);
+
+    return () => {
+      clearInterval(refreshIntervalRef);
+    };
+    */
+  }, []);
   
   const handleStatusChange = async (status: "pending" | "approved" | "rejected") => {
     if (!id) return;
@@ -65,8 +85,75 @@ const AdoptionDetail = () => {
     navigate('/admin/dashboard');
   };
   
-  if (loading) {
-    return <LoadingMessage>입양 신청 정보를 불러오는 중...</LoadingMessage>;
+  if (loading || animalsLoading) {
+    return (
+      <Container>
+        <Header>
+          <BackButton onClick={handleBack}>돌아가기</BackButton>
+          <Title>
+            <Skeleton width="300px" height="32px" />
+          </Title>
+          <Skeleton width="80px" height="30px" borderRadius="16px" />
+        </Header>
+        
+        <ContentSection>
+          <SectionTitle>신청자 정보</SectionTitle>
+          <InfoGrid>
+            {[1, 2, 3, 4].map((_, index) => (
+              <InfoItem key={`skeleton-info-${index}`}>
+                <InfoLabel>
+                  <Skeleton width="100px" height="14px" />
+                </InfoLabel>
+                <InfoValue>
+                  <Skeleton width="200px" height="16px" />
+                </InfoValue>
+              </InfoItem>
+            ))}
+          </InfoGrid>
+        </ContentSection>
+        
+        <ContentSection>
+          <SectionTitle>환경 정보</SectionTitle>
+          <InfoGrid>
+            {[1, 2, 3].map((_, index) => (
+              <InfoItem key={`skeleton-env-${index}`}>
+                <InfoLabel>
+                  <Skeleton width="100px" height="14px" />
+                </InfoLabel>
+                <InfoValue>
+                  <Skeleton width="200px" height="16px" />
+                </InfoValue>
+              </InfoItem>
+            ))}
+          </InfoGrid>
+        </ContentSection>
+        
+        <ContentSection>
+          <SectionTitle>성향 정보</SectionTitle>
+          <InfoGrid>
+            {[1, 2, 3, 4].map((_, index) => (
+              <InfoItem key={`skeleton-pref-${index}`}>
+                <InfoLabel>
+                  <Skeleton width="120px" height="14px" />
+                </InfoLabel>
+                <InfoValue>
+                  <Skeleton width="180px" height="16px" />
+                </InfoValue>
+              </InfoItem>
+            ))}
+          </InfoGrid>
+        </ContentSection>
+        
+        <ContentSection>
+          <SectionTitle>신청 관리</SectionTitle>
+          <StatusButtonsSkeleton>
+            <Skeleton width="33%" height="40px" borderRadius="8px" />
+            <Skeleton width="33%" height="40px" borderRadius="8px" />
+            <Skeleton width="33%" height="40px" borderRadius="8px" />
+          </StatusButtonsSkeleton>
+        </ContentSection>
+      </Container>
+    );
   }
   
   if (error || !adoption) {
@@ -212,6 +299,40 @@ const AdoptionDetail = () => {
     </Container>
   );
 };
+
+// 스타일 컴포넌트 정의
+const Skeleton = styled.div<{
+  width: string;
+  height: string;
+  borderRadius?: string;
+  marginBottom?: string;
+}>`
+  width: ${props => props.width};
+  height: ${props => props.height};
+  border-radius: ${props => props.borderRadius || '4px'};
+  margin-bottom: ${props => props.marginBottom || '0'};
+  background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+  background-size: 200% 100%;
+  animation: shimmer 1.5s infinite;
+  
+  @keyframes shimmer {
+    0% {
+      background-position: -200% 0;
+    }
+    100% {
+      background-position: 200% 0;
+    }
+  }
+`;
+
+const StatusButtonsSkeleton = styled.div`
+  display: flex;
+  gap: 12px;
+  
+  @media (max-width: 768px) {
+    flex-direction: column;
+  }
+`;
 
 const Container = styled.div`
   width: 100%;
