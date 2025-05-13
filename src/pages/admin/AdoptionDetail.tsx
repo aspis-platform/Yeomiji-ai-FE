@@ -31,12 +31,10 @@ const AdoptionDetail = () => {
     }
     
     // 동물 정보 불러오기
-    fetchAnimals();
-    
     if (id) {
       fetchAdoption(parseInt(id));
     }
-  }, [id, fetchAdoption, navigate, fetchAnimals]);
+  }, [id, fetchAdoption, navigate]);
   
   // 자동 새로고침 설정 (주석 처리 됨)
   useEffect(() => {

@@ -27,10 +27,31 @@ const Survey = () => {
     }));
   };
 
+  const handleJobSelect = (job: string) => {
+    setSurveyData(prev => ({
+      ...prev,
+      job
+    }));
+  };
+  
+  const handleCustomJobInput = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setSurveyData(prev => ({
+      ...prev,
+      job: e.target.value
+    }));
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    
+    // 직업 필드 검증
+    if (!surveyData.job || surveyData.job.trim() === '') {
+      alert('직업을 선택하거나 입력해주세요.');
+      return;
+    }
+    
     try {
-      await submitSurvey(surveyData);
+      await submitSurvey(); // 매개변수 제거
       navigate('/result');
     } catch (error) {
       console.error('설문 제출 실패:', error);
@@ -43,15 +64,64 @@ const Survey = () => {
         <h1>반려견 입양 설문</h1>
         <form onSubmit={handleSubmit}>
           <FormGroup>
-            <label htmlFor="job">직업</label>
-            <input
-              type="text"
-              id="job"
-              name="job"
-              value={surveyData.job}
-              onChange={handleInputChange}
-              required
-            />
+            <label>직업</label>
+            <JobButtonContainer>
+              <JobButton 
+                type="button"
+                selected={surveyData.job === '회사원'} 
+                onClick={() => handleJobSelect('회사원')}
+              >
+                회사원
+              </JobButton>
+              <JobButton 
+                type="button"
+                selected={surveyData.job === '자영업'} 
+                onClick={() => handleJobSelect('자영업')}
+              >
+                자영업
+              </JobButton>
+              <JobButton 
+                type="button"
+                selected={surveyData.job === '학생'} 
+                onClick={() => handleJobSelect('학생')}
+              >
+                학생
+              </JobButton>
+              <JobButton 
+                type="button"
+                selected={surveyData.job === '전문직'} 
+                onClick={() => handleJobSelect('전문직')}
+              >
+                전문직
+              </JobButton>
+              <JobButton 
+                type="button"
+                selected={surveyData.job === '프리랜서'} 
+                onClick={() => handleJobSelect('프리랜서')}
+              >
+                프리랜서
+              </JobButton>
+              <JobButton 
+                type="button"
+                selected={!/회사원|자영업|학생|전문직|프리랜서/.test(surveyData.job) && surveyData.job !== ''} 
+                onClick={() => document.getElementById('customJob')?.focus()}
+                isOther
+              >
+                기타
+              </JobButton>
+            </JobButtonContainer>
+            
+            {!/회사원|자영업|학생|전문직|프리랜서/.test(surveyData.job) && (
+              <CustomJobInput
+                type="text"
+                id="customJob"
+                name="customJob"
+                value={surveyData.job}
+                onChange={handleCustomJobInput}
+                placeholder="직업을 입력해주세요"
+                required={!/회사원|자영업|학생|전문직|프리랜서/.test(surveyData.job)}
+              />
+            )}
           </FormGroup>
 
           <FormGroup>
@@ -222,6 +292,100 @@ const SubmitButton = styled.button`
   &:hover {
     background: ${theme.color.mainDark};
     transform: translateY(-2px);
+  }
+`;
+
+const JobButtonContainer = styled.div`
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-bottom: 12px;
+`;
+
+const JobButton = styled.button<{ selected: boolean; isOther?: boolean }>`
+  padding: 12px 20px;
+  border-radius: 8px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  flex: 1 0 calc(33.333% - 10px);
+  min-width: 120px;
+  border: 2px solid ${props => props.selected ? theme.color.main : '#ddd'};
+  background-color: ${props => props.selected ? theme.color.main : 'white'};
+  color: ${props => props.selected ? 'white' : '#333'};
+  position: relative;
+  overflow: hidden;
+  
+  ${props => props.isOther && props.selected && `
+    background-color: #f0f0f0;
+    border-color: ${theme.color.main};
+    color: ${theme.color.main};
+  `}
+  
+  &:hover {
+    background-color: ${props => props.selected ? theme.color.main : '#f0f0f0'};
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    ${props => props.isOther && `
+      border-color: ${theme.color.main};
+      color: ${theme.color.main};
+    `}
+  }
+  
+  &:active {
+    transform: translateY(0);
+  }
+  
+  &::after {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 100px;
+    height: 100px;
+    background-color: rgba(255, 255, 255, 0.2);
+    border-radius: 50%;
+    transform: translate(-50%, -50%) scale(0);
+    opacity: 0;
+    transition: transform 0.4s ease-out, opacity 0.4s ease-out;
+  }
+  
+  &:active::after {
+    transform: translate(-50%, -50%) scale(2);
+    opacity: 0;
+    transition: 0s;
+  }
+  
+  @media (max-width: 576px) {
+    flex: 1 0 calc(50% - 10px);
+  }
+`;
+
+const CustomJobInput = styled.input`
+  width: 100%;
+  padding: 12px;
+  border: 2px solid ${theme.color.main};
+  border-radius: 8px;
+  font-size: 16px;
+  margin-top: 10px;
+  background-color: white;
+  transition: all 0.3s ease;
+  animation: fadeIn 0.3s ease-in-out;
+  
+  &:focus {
+    outline: none;
+    box-shadow: 0 0 0 3px rgba(87, 143, 202, 0.25);
+  }
+  
+  @keyframes fadeIn {
+    from {
+      opacity: 0;
+      transform: translateY(-10px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
   }
 `;
 

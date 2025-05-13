@@ -67,12 +67,14 @@ export interface AdoptionStatusUpdateRequest {
 // 동물 정보 DTO - 동가
 
 
+export interface Recommendation {
+  rank: number;
+  breed: string;
+  reason: string;
+}
+
 export interface RecommendationResult {
-  recommendations: {
-    rank: number;
-    breed: string;
-    reason: string;
-  }[];
+  recommendations: Recommendation[];
 }
 
 // 입양 신청 요청 DTO

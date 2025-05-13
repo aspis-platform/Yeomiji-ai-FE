@@ -1,7 +1,7 @@
 import axios from 'axios';
 
 // API 기본 URL 설정
-const API_BASE_URL = 'http://localhost:8000';
+const API_BASE_URL = 'https://aspis-aiexpo-api.ncloud.sbs';
 
 // axios 인스턴스 생성
 export const api = axios.create({

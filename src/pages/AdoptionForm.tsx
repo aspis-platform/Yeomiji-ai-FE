@@ -21,17 +21,19 @@ const AdoptionFormPage = () => {
     personality: surveyData?.personality || "",
     activity_preference: surveyData?.activityLevel || "",
     size_preference: surveyData?.dogSize || "",
-    dog_breed: breedId || "",
-    userSurvey: surveyData ? {
-      job: surveyData.job,
-      house_type: surveyData.houseType,
-      house_ownership: surveyData.houseOwnership,
-      family_form: surveyData.familyForm,
-      personality: surveyData.personality,
-      activity_level: surveyData.activityLevel,
-      dog_size: surveyData.dogSize
-    } : undefined
+    dog_breed: breedId || ""
   });
+  
+  // 추가 데이터 (API에는 전달되지 않음)
+  const surveyDataForContext = surveyData ? {
+    job: surveyData.job,
+    house_type: surveyData.houseType,
+    house_ownership: surveyData.houseOwnership,
+    family_form: surveyData.familyForm,
+    personality: surveyData.personality,
+    activity_level: surveyData.activityLevel,
+    dog_size: surveyData.dogSize
+  } : undefined;
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
