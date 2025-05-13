@@ -34,15 +34,48 @@ export interface Breed {
   compatibilityScore?: number;
 }
 
-export interface Recommendation {
-  breed: string;
-  reason: string;
+// 사용자 인증 DTO
+export interface LoginRequest {
+  username: string;
+  password: string;
 }
+
+export interface LoginResponse {
+  access_token: string;
+  token_type: string;
+}
+
+// 사용자 등록 DTO
+export interface UserRegistrationRequest {
+  username: string;
+  password: string;
+  is_admin: boolean;
+}
+
+export interface UserRegistrationResponse {
+  id: number;
+  username: string;
+  is_admin: boolean;
+}
+
+// 입양 신청 상태 업데이트 DTO
+export interface AdoptionStatusUpdateRequest {
+  status: "pending" | "approved" | "rejected";
+  dog_breed?: string;
+}
+
+// 동물 정보 DTO - 동가
+
 
 export interface RecommendationResult {
-  recommendations: Recommendation[];
+  recommendations: {
+    rank: number;
+    breed: string;
+    reason: string;
+  }[];
 }
 
+// 입양 신청 요청 DTO
 export interface AdoptionForm {
   name: string;
   email: string;
@@ -54,20 +87,12 @@ export interface AdoptionForm {
   personality: string;
   activity_preference: string;
   size_preference: string;
-  dog_breed: string;
-  userSurvey?: {
-    job: string;
-    house_type: string;
-    house_ownership: string;
-    family_form: string;
-    personality: string;
-    activity_level: string;
-    dog_size: string;
-  };
+  dog_breed?: string; // 선택 사항
 }
 
+// 입양 신청 응답 DTO
 export interface AdoptionResponse {
-  id: string;
+  id: number;
   name: string;
   email: string;
   phone: string;
@@ -79,7 +104,7 @@ export interface AdoptionResponse {
   activity_preference: string;
   size_preference: string;
   dog_breed: string;
-  status: string;
+  status: string; // "pending", "approved", "rejected" 중 하나
   created_at: string;
   updated_at: string;
 }
@@ -105,11 +130,11 @@ export interface BreedInfo {
 export interface Animal {
   id: string;
   name: string;
-  breedInfo: {
-    breedName: string;
-  };
-  sex: 'MALE' | 'FEMALE';
-  isNeutered: boolean;
-  profileUrl: string;
+  breed: string;
   breedId: string;
+  size: string;
+  sex: string;
+  birthYear: number;
+  profileUrl: string;
+  isNeutered?: boolean;
 }

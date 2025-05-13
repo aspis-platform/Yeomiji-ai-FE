@@ -1,39 +1,4 @@
-const LoadingOverlay = styled.div`
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  align-items: center;
-  background-color: rgba(255, 255, 255, 0.8);
-  z-index: 10;
-  gap: 20px;
-  backdrop-filter: blur(2px);
-  
-  p {
-    font-size: 18px;
-    font-weight: 500;
-    color: ${theme.color.main};
-    margin-top: 20px;
-  }
-`;
-
-const LoadingSpinner = styled.div`
-  width: 60px;
-  height: 60px;
-  border: 6px solid rgba(87, 143, 202, 0.2);
-  border-top: 6px solid ${theme.color.main};
-  border-radius: 50%;
-  animation: spin 1s linear infinite;
-  
-  @keyframes spin {
-    0% { transform: rotate(0deg); }
-    100% { transform: rotate(360deg); }
-  }
-`;import styled from "styled-components";
+import styled from "styled-components";
 import { theme } from "../style/theme";
 import cross from "../assets/cross.svg";
 import StartView from "../components/main/StartView";
@@ -46,6 +11,7 @@ import FamilyFormView from "../components/main/FamilyFormView";
 import DogSizeView from "../components/main/DogSizeView";
 import ResultView from "../components/Result/ResultView";
 import { useSurvey } from "../context/SurveyContext";
+import { useNavigate } from "react-router-dom";
 
 const AiChat = () => {
   const { 
@@ -56,6 +22,12 @@ const AiChat = () => {
     submitSurvey,
     clearSurvey
   } = useSurvey();
+  
+  const navigate = useNavigate();
+
+  const goToAdminLogin = () => {
+    navigate('/admin/login');
+  };
 
   const goToNext = () => {
     if (currentStep === 7) {
@@ -133,6 +105,9 @@ const AiChat = () => {
   return (
     <>
       <Section>
+        <AdminLinkWrapper>
+          <AdminLinkButton onClick={goToAdminLogin}>관리자 페이지</AdminLinkButton>
+        </AdminLinkWrapper>
         <Container>
           <MainTitle>아스피스 AI 입양 매칭</MainTitle>
           <ChatBox>
@@ -205,6 +180,66 @@ const AiChat = () => {
     </>
   );
 };
+
+const AdminLinkWrapper = styled.div`
+  position: absolute;
+  top: 20px;
+  right: 20px;
+  z-index: 100;
+`;
+
+const AdminLinkButton = styled.button`
+  background-color: #f5f5f5;
+  color: ${theme.color.main};
+  border: none;
+  padding: 10px 16px;
+  border-radius: 8px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  
+  &:hover {
+    background-color: ${theme.color.main};
+    color: white;
+  }
+`;
+
+const LoadingOverlay = styled.div`
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  background-color: rgba(255, 255, 255, 0.8);
+  z-index: 10;
+  gap: 20px;
+  backdrop-filter: blur(2px);
+  
+  p {
+    font-size: 18px;
+    font-weight: 500;
+    color: ${theme.color.main};
+    margin-top: 20px;
+  }
+`;
+
+const LoadingSpinner = styled.div`
+  width: 60px;
+  height: 60px;
+  border: 6px solid rgba(87, 143, 202, 0.2);
+  border-top: 6px solid ${theme.color.main};
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+  
+  @keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+  }
+`;
 
 const ScrollableArea = styled.div`
   flex: 1;
@@ -366,6 +401,10 @@ const Section = styled.section`
   align-items: center;
   overflow: hidden;
   background-color: #f9fafc;
+  position: relative;
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
 `;
 
 export default AiChat;

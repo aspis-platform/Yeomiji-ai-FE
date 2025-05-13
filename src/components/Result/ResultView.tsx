@@ -21,12 +21,15 @@ const ResultView = () => {
       if (recommendation?.recommendations) {
         setLoadingAnimals(true);
         try {
-          const animals = await apiService.getShelterAnimals();
+          // 새로운 API 호출
+          const animals = await apiService.getAnimals();
+          
           // 추천된 견종과 일치하는 동물만 필터링
           const recommendedBreeds = recommendation.recommendations.map(rec => rec.breed);
           const filteredAnimals = animals.filter(animal => 
-            recommendedBreeds.includes(animal.breedInfo.breedName)
+            recommendedBreeds.includes(animal.breed)
           );
+          
           setShelterAnimals(filteredAnimals);
         } catch (error) {
           console.error('보호소 동물 데이터 조회 실패:', error);
@@ -104,7 +107,7 @@ const ResultView = () => {
           <DogInfo 
             key={animal.id}
             name={animal.name}
-            description={`${animal.breedInfo.breedName} | ${animal.sex === 'MALE' ? '수컷' : '암컷'} | ${animal.isNeutered ? '중성화 완료' : '중성화 미완료'}`}
+            description={`${animal.breed} | ${animal.sex === 'MALE' ? '수컷' : '암컷'} | 생년월: ${animal.birthYear}년`}
             imageUrl={animal.profileUrl}
             onAdoptClick={() => handleShowAdoptionForm(animal.breedId)}
             onClick={() => setSelectedAnimal(animal)}
@@ -119,9 +122,10 @@ const ResultView = () => {
             <AnimalImage src={selectedAnimal.profileUrl} alt={selectedAnimal.name} />
             <AnimalInfo>
               <h2>{selectedAnimal.name}</h2>
-              <p>견종: {selectedAnimal.breedInfo.breedName}</p>
+              <p>견종: {selectedAnimal.breed}</p>
               <p>성별: {selectedAnimal.sex === 'MALE' ? '수컷' : '암컷'}</p>
-              <p>중성화: {selectedAnimal.isNeutered ? '완료' : '미완료'}</p>
+              <p>중성화 여부: {selectedAnimal.isNeutered ? '완료' : '미완료'}</p>
+              <p>출생년도: {selectedAnimal.birthYear}년</p>
             </AnimalInfo>
             <AdoptButton onClick={() => handleShowAdoptionForm(selectedAnimal.breedId)}>
               입양 신청하기
@@ -135,7 +139,7 @@ const ResultView = () => {
 };
 
 const Section = styled.section`
-  width: 90%;
+  width: 100%;
   max-width: 1200px;
   display: flex;
   flex-direction: column;
@@ -145,6 +149,7 @@ const Section = styled.section`
   font-weight: 500;
   padding: 80px 0;
   margin: 0 auto;
+  box-sizing: border-box;
 `;
 
 const LoadingMessage = styled.div`

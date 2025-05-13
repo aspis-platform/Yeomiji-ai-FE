@@ -3,6 +3,7 @@ export type {
   Breed,
   RecommendationResult,
   AdoptionForm,
+  AdoptionResponse,
   ApiError,
   JobType,
   HouseType,
@@ -10,9 +11,26 @@ export type {
   FamilyFormType,
   PersonalityType,
   DogSizeType,
-  ActivityLevelType
+  ActivityLevelType,
+  LoginRequest,
+  LoginResponse,
+  UserRegistrationRequest,
+  UserRegistrationResponse,
+  AdoptionStatusUpdateRequest,
+  Animal
 } from './types';
 
 export { api } from './config';
 export { apiService } from './services';
-export { useAvailableBreeds, useBreedRecommendation, useAdoptionSubmit } from './hooks';
+export { 
+  useAvailableBreeds, 
+  useBreedRecommendation, 
+  useAdoptionSubmit,
+  useLogin,
+  useUserRegistration,
+  useAdoptionsList,
+  useAdoptionDetail,
+  useAdoptionStatusUpdate,
+  useAdoptionDelete,
+  useAnimals
+} from './hooks';
