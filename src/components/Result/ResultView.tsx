@@ -30,6 +30,13 @@ const ResultView = () => {
             recommendedBreeds.includes(animal.breed)
           );
           
+          // 추천 순위에 따라 정렬 (1등이 먼저 나오도록)
+          filteredAnimals.sort((a, b) => {
+            const aIndex = recommendedBreeds.indexOf(a.breed);
+            const bIndex = recommendedBreeds.indexOf(b.breed);
+            return aIndex - bIndex;
+          });
+          
           setShelterAnimals(filteredAnimals);
         } catch (error) {
           console.error('보호소 동물 데이터 조회 실패:', error);
